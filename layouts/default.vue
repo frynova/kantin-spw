@@ -2,7 +2,7 @@
   <div class="flex h-screen">
     <div class="flex flex-col flex-1 overflow-hidden">
       <MainHeader @open-navbar="navbar = true" />
-      <div class="container mx-auto">
+      <div class="container mx-auto px-4 py-5">
         <slot />
       </div>
       <USlideover v-model="navbar" side="left" :ui="{ background: 'bg-[#3F3F3F]' }">
