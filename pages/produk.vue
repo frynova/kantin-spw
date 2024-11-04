@@ -28,11 +28,11 @@
     </div>
     <div v-else class="min-h-full grid grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-8">
       <div v-for="product in filteredProducts" :key="product.id">
-        <UCard class="h-full shadow-lg" :class="borderClass(product.kelompok.kelas.nama)"
-          :ui="{ body: { base: 'h-full grid grid-flow-col grid-cols-2 grid-rows-2 gap-5' } }">
+        <UCard class="h-full shadow-lg hover:scale-105 duration-300" :class="borderClass(product.kelompok.kelas.nama)"
+          :ui="{ body: { base: 'h-full grid grid-flow-col grid-cols-2 grid-rows-2 gap-5 relative' } }">
           <div class="flex flex-col">
-            <div class="font-bold text-lg">{{ product.nama }}</div>
-            <div class="text-lg text-red-500">{{ rupiah(product.harga) }}</div>
+            <div class="font-bold text-xl">{{ product.nama }}</div>
+            <div class="font-semibold text-lg text-green-500">{{ rupiah(product.harga) }}</div>
             <div class="text-sm">Stok: {{ product.sisa }}</div>
           </div>
           <div class="flex items-end me-5">
@@ -42,8 +42,15 @@
             <NuxtImg v-if="product.fotoUrl" :src="product.fotoUrl" width="300" />
             <NuxtImg v-else src="img/img-placeholder.png" width="300" />
           </div>
-          <!-- <div v-if="product.kelompok" class="text-center text-gray-500 text-sm">{{ product.kelompok.nama }} / {{
-            product.kelompok.kelas.nama }}</div> -->
+          <UTooltip class="absolute top-1 end-1" :ui="{  }" :popper="{ arrow: true, placement: 'top-end' }">
+            <UIcon name="i-tabler-info-circle" class="w-5 h-5" />
+            <template #text>
+              <div v-if="product.kelompok" class="text-sm">
+                <span class="text-gray-400">{{ product.kelompok.nama }}</span> / <span class="text-gray-600">{{
+                  product.kelompok.kelas.nama }}</span>
+              </div>
+            </template>
+          </UTooltip>
         </UCard>
       </div>
     </div>
