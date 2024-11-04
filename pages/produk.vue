@@ -26,7 +26,7 @@
         {{ error.message }}
       </div>
     </div>
-    <div v-else class="min-h-full grid grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-8">
+    <div v-else class="min-h-full grid grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-8">
       <div v-for="product in filteredProducts" :key="product.id">
         <UCard class="h-full shadow-lg hover:scale-105 duration-300" :class="borderClass(product.kelompok.kelas.nama)"
           :ui="{ body: { base: 'h-full grid grid-flow-col grid-cols-2 grid-rows-2 gap-5 relative' } }">
@@ -34,15 +34,28 @@
             <div class="font-bold text-xl">{{ product.nama }}</div>
             <div class="font-semibold text-lg text-green-500">{{ rupiah(product.harga) }}</div>
             <div class="text-sm">Stok: {{ product.sisa }}</div>
+            {{ orders[product.id] }}
+            {{ product.order }}
           </div>
-          <div class="flex items-end me-5">
-            <UButton class="w-full justify-center" label="Add to cart" />
+          <div v-if="orders[product.id]?.jumlah > 0" class="flex items-end me-5">
+            <div class="flex items-center gap-x-5">
+              <UButton class="active:bg-green-700 active:text-white transition" icon="i-heroicons-minus-20-solid"
+                variant="outline" :ui="{ rounded: 'rounded-full' }" @click="orderProduct(product.id, -1)" />
+              <div>{{ orders[product.id]?.jumlah }}</div>
+              <UButton class="active:bg-green-700 active:text-white transition" icon="i-heroicons-plus-20-solid"
+                variant="outline" :ui="{ rounded: 'rounded-full' }"
+                @click="orderProduct(product.id, 1)" />
+            </div>
+          </div>
+          <div v-else class="flex items-end me-5">
+            <UButton class="w-full justify-center rounded-full active:bg-green-700 active:text-white transition"
+              variant="outline" color="emerald" label="Tambah" @click="orderProduct(product.id, 1)" />
           </div>
           <div class="row-span-2 flex justify-center items-center">
             <NuxtImg v-if="product.fotoUrl" :src="product.fotoUrl" width="300" />
             <NuxtImg v-else src="img/img-placeholder.png" width="300" />
           </div>
-          <UTooltip class="absolute top-1 end-1" :ui="{  }" :popper="{ arrow: true, placement: 'top-end' }">
+          <UTooltip class="absolute top-1 end-1" :ui="{}" :popper="{ arrow: true, placement: 'top-end' }">
             <UIcon name="i-tabler-info-circle" class="w-5 h-5" />
             <template #text>
               <div v-if="product.kelompok" class="text-sm">
@@ -54,6 +67,7 @@
         </UCard>
       </div>
     </div>
+    {{ orders }}
   </div>
 </template>
 
@@ -87,7 +101,8 @@ const { data: products, status, error } = useLazyAsyncData('products', async () 
         const { data: url } = supabase.storage.from('produk').getPublicUrl(data.foto)
         return {
           ...data,
-          fotoUrl: data.foto ? url.publicUrl : null
+          fotoUrl: data.foto ? url.publicUrl : null,
+          order: orders.value[data.id]?.jumlah ?? 0
         }
       })
     }
@@ -114,6 +129,28 @@ const filteredProducts = computed(() => {
   })
 
   return filtered
+})
+
+const orderProduct = (productId, amount) => {
+  const product = products.value.find(product => product.id === productId)
+  if (!product) return
+  product.order = amount > 0 ? Math.min(product.order + amount, product.sisa) : Math.max(product.order + amount, 0)
+  orders.value = {
+    ...orders.value,
+    [productId]: {
+      produk: product.id,
+      jumlah: product.order
+    }
+  }
+  // product.order = Math.min(product.order + 1, product.sisa)
+  // orders.value[product.id] = {
+  //   produk: product.id,
+  //   jumlah: product.order
+  // }
+}
+
+const orders = useCookie('orders', {
+  default: () => ({})
 })
 </script>
 
