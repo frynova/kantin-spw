@@ -50,7 +50,8 @@ const links = [
     {
       label: 'Kelola Produk',
       to: '/dashboard/produk'
-    },
+    }
+    
   ],
   [
     {
