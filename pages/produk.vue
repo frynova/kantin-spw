@@ -34,14 +34,12 @@
             <div class="font-bold text-xl">{{ product.nama }}</div>
             <div class="font-semibold text-lg text-green-500">{{ rupiah(product.harga) }}</div>
             <div class="text-sm">Stok: {{ product.sisa }}</div>
-            {{ orders[product.id] }}
-            {{ product.order }}
           </div>
-          <div v-if="orders[product.id]?.jumlah > 0" class="flex items-end me-5">
+          <div v-if="product.order > 0" class="flex items-end me-5">
             <div class="flex items-center gap-x-5">
               <UButton class="active:bg-green-700 active:text-white transition" icon="i-heroicons-minus-20-solid"
                 variant="outline" :ui="{ rounded: 'rounded-full' }" @click="orderProduct(product.id, -1)" />
-              <div>{{ orders[product.id]?.jumlah }}</div>
+              <div>{{ product.order }}</div>
               <UButton class="active:bg-green-700 active:text-white transition" icon="i-heroicons-plus-20-solid"
                 variant="outline" :ui="{ rounded: 'rounded-full' }"
                 @click="orderProduct(product.id, 1)" />
@@ -67,7 +65,6 @@
         </UCard>
       </div>
     </div>
-    {{ orders }}
   </div>
 </template>
 
@@ -99,10 +96,12 @@ const { data: products, status, error } = useLazyAsyncData('products', async () 
     if (data) {
       data = data.map(data => {
         const { data: url } = supabase.storage.from('produk').getPublicUrl(data.foto)
+
+        const existingOrder = orders.value.find(order => order.produk === data.id)
         return {
           ...data,
           fotoUrl: data.foto ? url.publicUrl : null,
-          order: orders.value[data.id]?.jumlah ?? 0
+          order: existingOrder ? existingOrder.jumlah : 0
         }
       })
     }
@@ -134,24 +133,23 @@ const filteredProducts = computed(() => {
 const orderProduct = (productId, amount) => {
   const product = products.value.find(product => product.id === productId)
   if (!product) return
-  product.order = amount > 0 ? Math.min(product.order + amount, product.sisa) : Math.max(product.order + amount, 0)
-  orders.value = {
-    ...orders.value,
-    [productId]: {
-      produk: product.id,
-      jumlah: product.order
-    }
+
+  const newOrder = Math.max(0, Math.min(product.order + amount, product.sisa))
+  product.order = newOrder
+  const orderIndex = orders.value.findIndex(order => order.produk === productId)
+
+  if (newOrder === 0) {
+    if (orderIndex !== -1) orders.value.splice(orderIndex, 1)
+  } else {
+    if (orderIndex !== -1) orders.value[orderIndex].jumlah = newOrder
+    else orders.value.push({
+      produk: productId,
+      jumlah: newOrder
+    })
   }
-  // product.order = Math.min(product.order + 1, product.sisa)
-  // orders.value[product.id] = {
-  //   produk: product.id,
-  //   jumlah: product.order
-  // }
 }
 
-const orders = useCookie('orders', {
-  default: () => ({})
-})
+const orders = useCookie('orders', { default: () => [] })
 </script>
 
 <style scoped></style>
