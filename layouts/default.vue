@@ -1,6 +1,12 @@
 <template>
   <div class="flex flex-col h-screen overflow-hidden">
-    <MainHeader @open-navbar="navbar = true" />
+    <MainHeader @open-navbar="navbar = true">
+      <CartPopover />
+      <UButton v-if="user" to="/dashboard" icon="i-heroicons-user-circle" variant="ghost" color="black" size="xl"
+        :padded="false" />
+      <UButton v-else to="/login" color="white" :ui="{ rounded: 'rounded-full' }" class="px-10 py-2 font-bold">Login
+      </UButton>
+    </MainHeader>
     <div class="container h-full mx-auto px-4 py-5">
       <slot />
     </div>
@@ -31,6 +37,8 @@
 </template>
 
 <script setup>
+const user = useSupabaseUser()
+
 const navbar = ref(false)
 
 const links = [

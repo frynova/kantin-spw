@@ -47,11 +47,11 @@
           </div>
           <div v-else class="flex items-end me-5">
             <UButton class="w-full justify-center rounded-full active:bg-green-700 active:text-white transition"
-              variant="outline" color="emerald" label="Tambah" @click="orderProduct(product.id, 1)" />
+              variant="outline" color="emerald" label="+ Keranjang" @click="orderProduct(product.id, 1)" />
           </div>
           <div class="row-span-2 flex justify-center items-center">
-            <NuxtImg v-if="product.fotoUrl" :src="product.fotoUrl" width="300" />
-            <NuxtImg v-else src="img/img-placeholder.png" width="300" />
+            <NuxtImg v-if="product.fotoUrl" :src="product.fotoUrl" width="300" height="300" />
+            <NuxtImg v-else src="img/img-placeholder.png" width="300" height="300" />
           </div>
           <UTooltip class="absolute top-1 end-1" :ui="{}" :popper="{ arrow: true, placement: 'top-end' }">
             <UIcon name="i-tabler-info-circle" class="w-5 h-5" />
