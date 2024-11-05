@@ -71,6 +71,8 @@
 <script setup>
 const supabase = useSupabaseClient()
 
+const { cart, addToCart, removeFromCart } = useCart()
+
 const borderClass = (kelas) => {
   return {
     'border border-green-500 shadow-green-500': (kelas.includes('PPLG')),
@@ -96,12 +98,12 @@ const { data: products, status, error } = useLazyAsyncData('products', async () 
     if (data) {
       data = data.map(data => {
         const { data: url } = supabase.storage.from('produk').getPublicUrl(data.foto)
+        const cartItem = cart.value.find(order => order.produk === data.id)
 
-        const existingOrder = orders.value.find(order => order.produk === data.id)
         return {
           ...data,
           fotoUrl: data.foto ? url.publicUrl : null,
-          order: existingOrder ? existingOrder.jumlah : 0
+          order: cartItem ? cartItem.jumlah : 0
         }
       })
     }
@@ -134,22 +136,12 @@ const orderProduct = (productId, amount) => {
   const product = products.value.find(product => product.id === productId)
   if (!product) return
 
-  const newOrder = Math.max(0, Math.min(product.order + amount, product.sisa))
-  product.order = newOrder
-  const orderIndex = orders.value.findIndex(order => order.produk === productId)
+  const newAmount = Math.max(0, Math.min(product.order + amount, product.sisa))
+  product.order = newAmount
 
-  if (newOrder === 0) {
-    if (orderIndex !== -1) orders.value.splice(orderIndex, 1)
-  } else {
-    if (orderIndex !== -1) orders.value[orderIndex].jumlah = newOrder
-    else orders.value.push({
-      produk: productId,
-      jumlah: newOrder
-    })
-  }
+  if (newAmount === 0) removeFromCart(productId)
+  else addToCart(productId, newAmount)
 }
-
-const orders = useCookie('orders', { default: () => [] })
 </script>
 
 <style scoped></style>
