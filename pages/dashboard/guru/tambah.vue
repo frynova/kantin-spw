@@ -1,14 +1,10 @@
 <template>
-  <div class="flex flex-col w-auto min-h-screen justify-center items-center">
+  <div class="flex flex-col min-h-full items-center mt-48">
     <div class="w-fit relative border rounded-2xl">
-      <NuxtLink class="absolute top-3 left-3" to="/dashboard/guru/">⬅️</NuxtLink>
+      <UButton class="absolute top-3 left-3" icon="i-line-md-arrow-close-left" variant="ghost" @click="navigateTo('/dashboard/guru')"></UButton>
       <UForm class="p-10 space-y-4 flex flex-col" :validate="validate" :state="state" @submit="addGuru">
         <UFormGroup label="Nama Guru" name="nama">
           <UInput v-model="state.nama" placeholder="Nama lengkap" />
-        </UFormGroup>
-        <UFormGroup label="Jadwal" name="jadwal">
-          <USelect :options="schedules" option-attribute="hari" value-attribute="id" class="text-black"
-            v-model="state.jadwal" placeholder="Hari"/>
         </UFormGroup>
         <UButton :loading="status == 'pending'" class="justify-center" type="submit">
           Tambah
@@ -20,36 +16,31 @@
 </template>
 
 <script setup>
+definePageMeta({
+  layout: 'dashboard',
+  middleware: 'auth'
+})
+
 const supabase = useSupabaseClient()
 
 const state = reactive({
-  nama: '',
-  jadwal: null,
+  nama: ''
 })
 
 const validate = (state) => {
   const errors = []
   if (!state.nama) errors.push({ path: 'nama', message: 'Required' })
-  if (!state.jadwal) errors.push({ path: 'jadwal', message: 'Required' })
   return errors
 }
 
 const { execute: addGuru, status, error } = await useAsyncData('addGuru', async () => {
   const { error } = await supabase.from('guru').insert([{
-    nama: state.nama,
-    jadwal: Number(state.jadwal.hari),
-    
+    nama: state.nama
   }])
   if (error) throw new Error('Gagal menambahkan data')
   navigateTo('/dashboard/guru')
 }, {
   immediate: false
-})
-
-const { data: schedules } = await useAsyncData('schedules', async () => {
-  const { data, error } = await supabase.from('jadwal').select().order('id')
-  if (error) throw error
-  return data
 })
 </script>
 

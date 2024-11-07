@@ -25,16 +25,16 @@
 
 .layout-enter-active,
 .layout-leave-active {
-  transition: all 0.4s;
+  transition: all 0.7s;
 }
 .layout-enter-from,
 .layout-leave-to {
   opacity: 0;
 }
 .layout-enter-from {
-  translate: -2000px 0;
+  transform: rotateY(90deg);
 }
 .layout-leave-to {
-  translate: 2000px 0;
+  transform: rotateY(-90deg);
 }
 </style>

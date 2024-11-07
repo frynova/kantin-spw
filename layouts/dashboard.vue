@@ -3,9 +3,11 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       <DashboardHeader />
       <div class="flex h-full">
-        <Sidebar />
-        <div class="container px-4 py-10 flex justify-center overflow-x-hidden overflow-y-auto">
-          <slot />
+        <DashboardSidebar />
+        <div class="flex-1 overflow-x-hidden overflow-y-auto">
+          <div class="container mx-auto px-4 pt-10 pb-20">
+            <slot />
+          </div>
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@
   <div class="flex h-screen">
     <div class="flex flex-col flex-1 overflow-hidden">
       <MainHeader @open-navbar="navbar = true" />
-      <div class="container mx-auto">
+      <div class="container mx-auto px-4 py-5">
         <slot />
       </div>
       <USlideover v-model="navbar" side="left" :ui="{ background: 'bg-[#3F3F3F]' }">
@@ -15,7 +15,14 @@
             inactive: ''
           }">
             <template #default="{ link }">
-              <span class="text-white font-bold text-xl relative flex items-center gap-2">{{ link.label }} <UIcon name="i-heroicons-chevron-right" class="transition-transform group-hover:translate-x-7 ease-out"></UIcon></span>
+              <span class="group text-white font-bold text-xl relative flex flex-wrap items-center gap-x-2">
+                <span class="flex-grow flex flex-col">
+                  <span>{{ link.label }}</span>
+                  <span class="flex-grow max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-white"></span>
+                </span>
+                <UIcon name="i-heroicons-chevron-right"
+                  class="transition-transform group-hover:translate-x-7 duration-500 ease-out flex-grow" />
+              </span>
             </template>
           </UVerticalNavigation>
         </div>

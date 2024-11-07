@@ -1,12 +1,12 @@
 <template>
-  <div class="h-full bg-[#3E3E3E] text-white flex-[0.12] flex-col">
+  <aside class="h-full bg-[#3E3E3E] text-white flex-[0.12] flex-col">
     <UVerticalNavigation :links="links" :ui="{ inactive: 'text-white' }">
       <template #icon="{ link }">
         <UIcon v-if="link.type" :name="types[link.type].icon" :class="types[link.type].color" class="size-5" />
       </template>
     </UVerticalNavigation>
     <div v-if="status == 'error'" class="text-red-500">{{ error.message }}</div>
-  </div>
+  </aside>
 </template>
 
 <script setup>
@@ -50,6 +50,10 @@ const links = [
     {
       label: 'Kelola Produk',
       to: '/dashboard/produk'
+    },
+    {
+      label: 'Jadwal',
+      to: '/dashboard/jadwal'
     }
     
   ],

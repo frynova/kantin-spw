@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col w-auto min-h-screen justify-center items-center">
+  <div class="flex flex-col min-h-full justify-center items-center">
     <div class="w-fit relative border rounded-2xl">
       <NuxtLink class="absolute top-3 left-3" to="/dashboard/kelompok">⬅️</NuxtLink>
       <UForm class="p-10 space-y-4 flex flex-col" :validate="validate" :state="state" @submit="addKelompok">
