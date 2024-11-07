@@ -17,12 +17,31 @@
               <li v-for="teacher in day.guru">{{ teacher.nama }}</li>
             </ol>
             <template #footer>
-              <UButton icon="heroicons:pencil-square-20-solid" color="yellow" variant="ghost" />
+              <UButton icon="heroicons:pencil-square-20-solid" color="yellow" variant="ghost" label="Edit" @click="isOpen = true"/>
             </template>
           </UCard>
         </div>
       </UCard>
     </div>
+    <div>
+
+    <UModal v-model="isOpen" prevent-close>
+      <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-center font-semibold leading-6 text-gray-900 dark:text-white">
+              Edit Jadwal
+            </h3>
+            <div>
+
+            </div>
+            <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isOpen = false" />
+          </div>
+        </template>
+
+      </UCard>
+    </UModal>
+  </div>
   </div>
 </template>
 
@@ -53,6 +72,7 @@ const { data: schedules } = useAsyncData('schedules', async () => {
   }
 })
 
+const isOpen = ref(false)
 </script>
 
 <style scoped></style>

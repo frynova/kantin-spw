@@ -3,26 +3,43 @@
     <UBreadcrumb divider="/"
       :links="[{ label: 'Dashboard', to: '/dashboard' }, { label: 'Jadwal', to: '/dashboard/jadwal' }, { label: 'Jadwal Siswa', to: '/dashboard/jadwal/siswa' }]" />
 
-    <div v-if="schedules" class="gap-5">
-      <UCard v-for="schedule in schedules" :key="schedule.id" class="flex-1 text-center">
+    <div v-if="schedules" class="flex gap-5 w-1/2 items-center ml-80">
+      <UCard class="flex-1 text-center">
         <template #header>
-          <div>{{ schedule.nama }}</div>
+          <div> Piket </div>
         </template>
         <div class="grid grid-cols-2 grid-rows-2 gap-5 text-justify">
-          <UCard v-for="day in schedule.hari" :key="day.id">
+          <UCard v-for="schedule in schedules" :key="schedule.id" >
             <template #header>
-              <div class="text-center font-semibold">{{ day.nama }}</div>
+              <div class="text-center font-semibold">{{ schedule.nama }}</div>
             </template>
             <ol>
-              <li v-for="teacher in day.guru">{{ teacher.nama }}</li>
+              <li v-for="student in schedule.siswa"> {{ student.nama }} </li>
             </ol>
             <template #footer>
-              <UButton icon="heroicons:pencil-square-20-solid" color="yellow" variant="ghost" />
+              <UButton icon="heroicons:pencil-square-20-solid" color="yellow" label="Edit" variant="ghost" @click="isOpen = true"/>
             </template>
           </UCard>
         </div>
       </UCard>
     </div>
+    <UModal v-model="isOpen" prevent-close>
+      <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="  font-semibold leading-6 text-gray-900 dark:text-white">
+              Edit Jadwal
+            </h3>
+            <div>
+
+            </div>
+            <UButton color="gray" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isOpen = false" />
+          </div>
+        </template>
+
+
+      </UCard>
+    </UModal>
   </div>
 </template>
 
@@ -38,8 +55,8 @@ const { data: schedules } = useAsyncData('schedules', async () => {
   try {
     const { data, error } = await supabase.from('hari').select(`
       id, nama,
-        siswa (
-          id, nama
+      siswa (
+        id, nama
         )
       )
     `).order('id').range(0,3)
@@ -51,6 +68,7 @@ const { data: schedules } = useAsyncData('schedules', async () => {
   }
 })
 
+const isOpen = ref(false)
 </script>
 
 <style scoped></style>
