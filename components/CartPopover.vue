@@ -1,7 +1,7 @@
 <template>
   <UPopover mode="hover" :popper="{ placement: 'bottom-end' }" :ui="{ wrapper: 'flex' }">
     <UChip color="red" size="xl" :text="cart.length" :show="cart.length > 0">
-      <UButton icon="i-heroicons-shopping-cart" variant="ghost" color="black" :padded="false" />
+      <UButton to="/cart" icon="i-heroicons-shopping-cart" variant="ghost" color="black" :padded="false" />
     </UChip>
     <template #panel>
       <UCard :ui="{ base: 'text-black', body: { base: 'flex flex-col gap-3' } }">
