@@ -53,16 +53,21 @@
           <h3 class="text-center font-bold">Catat Pembelian Produk Ini?</h3>
         </template>
         <div v-if="selectedProducts.length" class="px-3">
-          <ol class="list-disc">
-            <li v-for="product in selectedProducts" :key="product.id">{{ product.nama }} ({{ product.buyAmount }})</li>
-          </ol>
+            <div class="border-b border-black">
+              <div v-for="product in selectedProducts" :key="product.id" class="flex justify-between">
+                <div>{{ product.nama }} ({{ product.buyAmount }} x {{ product.harga }})</div>
+                <div>{{ rupiah(product.harga * product.buyAmount) }}</div>
+              </div>
+            </div>
+          <div class="flex justify-between items-center">Total: <span class="text-lg text-green-500">{{
+            rupiah(selectedProducts.reduce((total, { harga, buyAmount }) => total + harga * buyAmount, 0)) }}</span></div>
         </div>
         <template #footer>
           <div class="flex gap-2">
             <UButton color="gray" class="flex flex-grow items-center justify-center h-[38px]" @click="closeRecordModal">
               Cancel</UButton>
-            <UButton color="amber" :loading="insertStatus === 'pending'" class="flex flex-grow items-center justify-center h-[38px]"
-              @click="insertTransactionRecord">
+            <UButton color="amber" :loading="insertStatus === 'pending'"
+              class="flex flex-grow items-center justify-center h-[38px]" @click="insertTransactionRecord">
               Catat</UButton>
           </div>
           <div class="flex justify-center text-red-500" v-if="insertError">{{ insertError.message }}</div>
