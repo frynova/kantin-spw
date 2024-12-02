@@ -1,22 +1,22 @@
 <template>
   <div class="flex flex-col flex-grow gap-y-5">
     <UBreadcrumb divider="/" :links="[
-      { label: 'Dashboard', to: '/dashboard' }, 
-      { label: 'Transaksi', to: '/dashboard/transaksi' }, 
+      { label: 'Dashboard', to: '/dashboard' },
+      { label: 'Transaksi', to: '/dashboard/transaksi' },
       { label: 'Riwayat Transaksi', to: '/dashboard/transaksi/riwayat' }
-      ]" />
+    ]" />
 
-    <div v-if="status === 'pending' || status === 'error'">
-      <div v-if="status === 'pending'">Loading...</div>
-      <div v-if="status === 'error'">{{ error }}</div>
+    <div class="flex">
+      <UInput type="date" v-model="date" @change="refresh" />
     </div>
-    <div v-else>
-      <UTable :rows="transactions" :columns="columns" class="w-full border rounded-lg">
+    <div v-if="status === 'error'" class="text-red-500">{{ error.message }}</div>
+    <div v-else class="flex flex-col gap-y-5">
+      <UTable :rows="transactions" :columns="columns" :loading="status === 'pending'" class="w-full border rounded-lg">
         <template #no-data="{ index }">
           {{ index + 1 }}
         </template>
         <template #waktu-data="{ row: { created_at: time } }">
-          {{ new Date(time).toISOString().replace('T', ' ').slice(0, 19) }}
+          {{ new Date(time).toLocaleString('id-ID') }}
         </template>
       </UTable>
     </div>
@@ -29,8 +29,11 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
+
+const date = ref(new Date().toLocaleDateString('en-CA'))
 
 const { data: userData } = await useAsyncData('userData', async () => {
   const { data, error } = await supabase.from('users').select('nama, role').eq('id', user.value.id).maybeSingle()
@@ -38,8 +41,8 @@ const { data: userData } = await useAsyncData('userData', async () => {
   return data
 })
 
-const { data: transactions, status, error } = useLazyAsyncData('transactions', async () => {
-  const { data, error } = await supabase.from('transaksi').select(`
+const { data: transactions, status, error, refresh } = useLazyAsyncData('transactions', async () => {
+  let query = supabase.from('transaksi').select(`
     id, created_at, jumlah,
     produk!inner (
       id, nama,
@@ -50,8 +53,16 @@ const { data: transactions, status, error } = useLazyAsyncData('transactions', a
         )
       )
     )
-  `).like('produk.kelompok.kelas.nama', `%${userData.value.nama.split(' ')[1]}%`)
+  `).like('produk.kelompok.kelas.nama', `%${userData.value.nama.split(' ')[1]}%`).order('created_at')
+  if (date.value) {
+    const start = new Date(new Date(date.value).setHours(0, 0, 0, 0)).toISOString()
+    const end = new Date(new Date(date.value).setHours(23, 59, 59, 999)).toISOString()
+    console.log(start)
+    query = query.gte('created_at', start).lte('created_at', end)
+  }
+  const { data, error } = await query
   if (error) throw error
+  console.log(data)
   return data
 })
 
@@ -62,7 +73,7 @@ const columns = [
   },
   {
     key: 'waktu',
-    label: 'Tanggal / Waktu'
+    label: 'Tanggal, Waktu'
   },
   {
     key: 'produk.kelompok.nama',
