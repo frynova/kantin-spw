@@ -124,11 +124,12 @@
         <template #header>
           <div class="font-semibold">Apakah Anda Yakin Ingin Menghapus Produk Ini?</div>
         </template>
-        <div v-if="selectedItem">
+        <div v-if="selectedItem" class="flex flex-col gap-y-2">
           <p>Nama Produk: {{ selectedItem.nama }}</p>
           <p v-if="selectedItem.kelompok">Kelompok: {{ selectedItem.kelompok.nama }} / {{
             selectedItem.kelompok.kelas.nama
           }}</p>
+          <UAlert icon="i-heroicons-exclamation-circle" color="red" variant="outline" title="Peringatan" description="Menghapus produk ini akan menghapus semua transaksi dan pemesanan yang berkaitan dengan produk ini." class="text-sm" />
         </div>
         <template #footer>
           <div class="flex gap-2">
@@ -400,7 +401,9 @@ const deleteProduct = async (productId) => {
 }
 
 watch([storeModal, editModal, deleteModal], ([newStoreModal, newEditModal, newDeleteModal], [oldStoreModal, oldEditModal, oldDeleteModal]) => {
-  if ((oldStoreModal && !newStoreModal) || (oldEditModal && !newEditModal) || (oldDeleteModal && !newDeleteModal)) resetState()
+  if ((oldStoreModal && !newStoreModal) || (oldEditModal && !newEditModal) || (oldDeleteModal && !newDeleteModal)) {
+    setTimeout(() => resetState(), 250)
+  }
 })
 </script>
 
