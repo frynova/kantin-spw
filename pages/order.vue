@@ -3,14 +3,27 @@
     <div class="font-bold text-3xl text-center">
       Pesanan Saya
     </div>
-    <div class="flex items-center gap-x-3">
-      <div class="text-medium text-lg">Metode:</div>
-      <UButton class="rounded-full" :variant="activeMethod('Semua')" color="black" label="Semua"
-        @click="selectedMethod = 'Semua'" />
-      <UButton class="rounded-full" :variant="activeMethod('Delivery')" color="black" label="Delivery"
-        @click="selectedMethod = 'Delivery'" />
-      <UButton class="rounded-full" :variant="activeMethod('Walk Thru')" color="black" label="Walk Thru"
-        @click="selectedMethod = 'Walk Thru'" />
+    <div class="flex justify-between">
+      <div class="flex items-center gap-x-3">
+        <div class="text-medium text-lg">Status:</div>
+        <UButton class="rounded-full" :variant="activeButton(selectedStatus, 'Semua')" color="black" label="Semua"
+          @click="selectedStatus = 'Semua'" />
+        <template v-for="{ id, status: orderStatus } in orderStatuses" :key="id">
+          <UButton
+            v-if="!(selectedMethod === 'Delivery' && orderStatus === 'Siap Diambil') && !(selectedMethod === 'Walk Thru' && orderStatus === 'Siap Diantar')"
+            class="rounded-full" :variant="activeButton(selectedStatus, orderStatus)" color="black" :label="orderStatus"
+            @click="selectedStatus = orderStatus" />
+        </template>
+      </div>
+      <div class="flex items-center gap-x-3">
+        <div class="text-medium text-lg">Metode:</div>
+        <UButton class="rounded-full" :variant="activeButton(selectedMethod, 'Semua')" color="black" label="Semua"
+          @click="selectedMethod = 'Semua'" />
+        <UButton class="rounded-full" :variant="activeButton(selectedMethod, 'Delivery')" color="black" label="Delivery"
+          @click="selectedMethod = 'Delivery'" />
+        <UButton class="rounded-full" :variant="activeButton(selectedMethod, 'Walk Thru')" color="black"
+          label="Walk Thru" @click="selectedMethod = 'Walk Thru'" />
+      </div>
     </div>
     <div class="flex flex-col gap-y-10">
       <UCard v-for="order in filteredOrders" :key="order.id">
@@ -69,14 +82,16 @@
               <div v-if="order.showAllStatuses || index === 0" class="flex gap-x-3">
                 <div class="flex flex-col min-w-5 items-center">
                   <UButton v-if="orderStatus === 'Menunggu Konfirmasi' && order.status_pemesanan.length < 2" loading
-                    variant="link" color="primary" :padded="false" class="cursor-pointer" />
+                    variant="link" color="primary" :padded="false" class="cursor" disabled />
                   <UButton v-else-if="['Diterima', 'Selesai'].includes(orderStatus)"
-                    icon="i-heroicons-check-badge-16-solid" variant="link" color="primary" :padded="false" />
+                    icon="i-heroicons-check-badge-16-solid" variant="link" color="primary" :padded="false" disabled />
                   <UButton v-else-if="orderStatus === 'Siap Diambil'" icon="i-tabler-shopping-cart-up" variant="link"
-                    color="yellow" :padded="false" />
+                    color="yellow" :padded="false" disabled />
                   <UButton v-else-if="orderStatus === 'Siap Diantar'" icon="i-tabler-truck-delivery" variant="link"
-                    color="yellow" :padded="false" />
-                  <UButton v-else icon="i-tabler-circle-filled" variant="link" color="gray" :padded="false" />
+                    color="yellow" :padded="false" disabled />
+                  <UButton v-else-if="orderStatus === 'Dibatalkan'" icon="i-tabler-cancel" variant="link" color="red"
+                    :padded="false" disabled />
+                  <UButton v-else icon="i-tabler-circle-filled" variant="link" color="gray" :padded="false" disabled />
                   <div v-if="(index + 1) < order.status_pemesanan.length && order.showAllStatuses"
                     class="w-0.5 bg-gray-500 h-full" :class="{
                       'bg-primary': index === 0 && orderStatus !== 'Dibatalkan',
@@ -98,16 +113,43 @@
             :trailing-icon="!order.showAllStatuses ? 'i-heroicons-chevron-down' : 'i-heroicons-chevron-up'"
             color="black" variant="link" label="Lihat Semua" @click="order.showAllStatuses = !order.showAllStatuses" />
         </div>
+        <template #footer v-if="!(['Selesai', 'Dibatalkan'].includes(order.status_pemesanan.at(-1).status.status))">
+          <div class="flex justify-end">
+            <UButton color="red" icon="i-tabler-cancel" label="Batalkan" @click="openCancelModal(order.id)" />
+          </div>
+        </template>
       </UCard>
     </div>
     <div v-if="status === 'error'" class="text-red-500">{{ error.message }}</div>
+
+    <UModal v-model="cancelModal">
+      <UCard>
+        <template #header>
+          <div class="text-lg font-semibold">Konfirmasi Pembatalan</div>
+        </template>
+        <div>
+          Apakah Anda yakin ingin membatalkan pesanan ini?
+        </div>
+        <template #footer>
+          <div class="flex gap-2">
+            <UButton color="gray" class="flex flex-grow items-center justify-center h-[38px]" @click="closeCancelModal">
+              Cancel</UButton>
+            <UButton :loading="cancelStatus === 'pending'" color="red" variant="outline"
+              class="flex flex-grow items-center justify-center h-[38px]" @click="cancelOrder">
+              Batalkan</UButton>
+          </div>
+          <div v-if="cancelError" class="text-red-500 flex justify-center">{{ cancelError.message }}</div>
+        </template>
+      </UCard>
+    </UModal>
   </div>
 </template>
 
 <script setup>
 const supabase = useSupabaseClient()
+const toast = useToast()
 
-const { data: orders, status, error } = useLazyAsyncData('orders', async () => {
+const { data: orders, status, error, refresh } = useLazyAsyncData('orders', async () => {
   let { data, error } = await supabase.from('pemesanan').select(`
     *,
     lokasi (
@@ -138,17 +180,55 @@ const { data: orders, status, error } = useLazyAsyncData('orders', async () => {
   return data
 })
 
+const { data: orderStatuses } = useAsyncData('orderStatuses', async () => {
+  const { data, error } = await supabase.from('status').select().order('id')
+  if (error) throw error
+  return data
+})
+
 const selectedMethod = ref('Semua')
-const activeMethod = method => selectedMethod.value === method ? 'solid' : 'outline'
+const selectedStatus = ref('Semua')
+const activeButton = (selected, label) => selected === label ? 'solid' : 'outline'
 
 const deliveryFee = metode => metode === 'Delivery' ? 1000 : 0
 
 const filteredOrders = computed(() => {
-  return orders.value.filter(order => {
-    const filterMethod = selectedMethod.value === 'Semua' ? true : order.metode === selectedMethod.value
+  return orders.value?.filter(({ metode, status_pemesanan: orderStatus }) => {
+    const filterStatus = selectedStatus.value === 'Semua' ? true : orderStatus.at(-1)?.status?.status === selectedStatus.value
+    const filterMethod = selectedMethod.value === 'Semua' ? true : metode === selectedMethod.value
 
-    return filterMethod
+    return filterStatus && filterMethod
   })
+})
+
+const selectedId = ref(null)
+
+const cancelModal = ref(false)
+const openCancelModal = orderId => {
+  selectedId.value = orderId
+  cancelModal.value = true
+}
+const closeCancelModal = () => {
+  selectedId.value = null
+  cancelModal.value = false
+}
+
+const { execute: cancelOrder, status: cancelStatus, error: cancelError } = useAsyncData('cancelOrder', async () => {
+  try {
+    const { error } = await supabase.from('status_pemesanan').insert({
+      id_pemesanan: selectedId.value,
+      id_status: 6,
+      waktu: new Date().toLocaleTimeString()
+    })
+    if (error) throw error
+    closeCancelModal()
+    refresh()
+    toast.add({ title: 'Pesanan berhasil dibatalkan', timeout: 2000 })
+  } catch (error) {
+    toast.add({ title: 'Gagal membatalkan pesanan', description: error.message, timeout: 2000 })
+  }
+}, {
+  immediate: false
 })
 </script>
 
